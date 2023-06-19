@@ -1,14 +1,9 @@
 from dotenv import load_dotenv
 from os import getenv
-import requests
-import json
-import requests
-import io
-import base64
-from PIL import Image, PngImagePlugin
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from configparser import ConfigParser
+import ai_api
 
 import keyboard
 
@@ -27,33 +22,22 @@ dp = Dispatcher(bot)
     
     
 @dp.message_handler(commands=['start'])
-async def send_welcome(message: types.Message):
+async def message_handler(message: types.Message):
     await message.answer("Successfull")
     
     
 @dp.message_handler(commands=['gen'])
-async def send_welcome(message: types.Message):
-    args = message.get_args()
-    config.read("conf.ini")
-    logging.info(f"{message.from_user.full_name} /gen {args}")
-    payload = {
-    "prompt": "".join(args),
-    "steps": config["ai"]["steps"],
-    "negative_prompt": config["ai"]["defaultnegative"]}
-    
-    r = requests.post(url=f'http://192.168.2.50:7860/sdapi/v1/txt2img', json=payload).json()
-    for i in r['images']:
-        await bot.send_photo(message.chat.id, base64.b64decode(i.split(",",1)[0]), reply_markup=keyboard.generate([["try again", "redo:" + "".join(args)]]))
+async def message_handler(message: types.Message):
+    prompt = "".join(message.get_args())
+    logging.info(f"{message.from_user.full_name} /gen {prompt}")
+    await bot.send_photo(message.chat.id, ai_api.generate_image(prompt), reply_markup=keyboard.generate([["try again", "redo:" + prompt]]))
     
     
 @dp.message_handler(commands=['steps'])
-async def send_welcome(message: types.Message):
+async def message_handler(message: types.Message):
     args = message.get_args().split(" ")
     if len(args) == 1 and args[0].isdigit():
-        config.read("conf.ini")
-        config.set('ai', 'steps', args[0])
-        with open('conf.ini', 'w') as config_file:
-            config.write(config_file)
+        ai_api.set_steps(args[0])
         logging.info(f"{message.from_user.full_name} set steps to {args[0]}")
         await bot.send_message(message.chat.id, "success")
     else:
@@ -61,13 +45,44 @@ async def send_welcome(message: types.Message):
         logging.warning(f"{message.from_user.full_name} /steps {args}")
         await bot.send_message(message.chat.id, "Wrong fromat, this will be reported")
         
+@dp.message_handler(commands=['cfg'])
+async def message_handler(message: types.Message):
+    args = message.get_args().split(" ")
+    if len(args) == 1 and args[0].isdigit():
+        ai_api.set_cfg(args[0])
+        logging.info(f"{message.from_user.full_name} set cfg to {args[0]}")
+        await bot.send_message(message.chat.id, "success")
+    else:
+        
+        logging.warning(f"{message.from_user.full_name} /cfg {args}")
+        await bot.send_message(message.chat.id, "Wrong fromat, this will be reported")
+        
+@dp.message_handler(commands=['res'])
+async def message_handler(message: types.Message):
+    try: 
+        width, height = message.get_args().split(maxsplit=1)
+        if width.isdigit() and height.isdigit():
+            ai_api.set_res(width, height)
+            logging.info(f"{message.from_user.full_name} set res to {message.get_args()}")
+            await bot.send_message(message.chat.id, "success")
+        else:
+            
+            logging.warning(f"{message.from_user.full_name} /res {message.get_args()}")
+            await bot.send_message(message.chat.id, "Wrong fromat, this will be reported")
+    except:
+        pass
+    
+@dp.message_handler(commands=['config'])
+async def message_handler(message: types.Message):
+    await bot.send_message(message.chat.id, ai_api.get_config())
         
 @dp.callback_query_handler()
 async def claabackfunc(callback: types.CallbackQuery):
     comand, args = callback.data.split(":", maxsplit=1)
     match comand:
         case "redo":
-            pass
+            logging.info(f"{callback.from_user.full_name} /gen {args}")
+            await bot.send_photo(callback.from_user.id, ai_api.generate_image(args), reply_markup=keyboard.generate([["try again", "redo:" + args]]))
         case _:
             pass
 
