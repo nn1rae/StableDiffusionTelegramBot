@@ -23,7 +23,8 @@ def generate_image(prompt):
     "cfg_scale": config["ai"]["cfg_scale"],
     "width": config["ai"]["width"],
     "height": config["ai"]["height"],
-    "negative_prompt": config["ai"]["defaultnegative"]}
+    "negative_prompt": config["ai"]["defaultnegative"],
+    "restore_faces": True}
     
     r = requests.post(url=f'http://192.168.2.50:7860/sdapi/v1/txt2img', json=payload).json()
     return base64.b64decode(r['images'][0].split(",",1)[0])
