@@ -42,7 +42,7 @@ async def message_handler(message: types.Message):
 async def message_handler(message: types.Message):
     prompt = "".join(message.get_args())
     logging.info(f"{message.from_user.full_name} /gen {prompt}")
-    await bot.send_photo(message.chat.id, ai.generate_image(prompt), reply_markup=keyboard.generate([["Reuse prompt", "redo:" + prompt], ["Prompt", "prompt:" + prompt]]))
+    await bot.send_photo(message.chat.id, ai.generate_image(prompt), reply_markup=keyboard.generate([["Regenerate", "redo:" + prompt], ["Prompt", "prompt:" + prompt]]))
     await bot.delete_message(message.chat.id, message.message_id)
     
     
@@ -105,7 +105,7 @@ async def claabackfunc(callback: types.CallbackQuery):
     comand, args = callback.data.split(":", maxsplit=1)
     match comand:
         case "redo":
-            await bot.send_photo(callback.from_user.id, ai.generate_image(args), reply_markup=keyboard.generate([["Reuse prompt", "redo:" + args], ["Prompt", "prompt:" + args]]))
+            await bot.send_photo(callback.from_user.id, ai.generate_image(args), reply_markup=keyboard.generate([["Regenerate", "redo:" + args], ["Prompt", "prompt:" + args]]))
         case "prompt":
             await bot.send_message(callback.from_user.id, args)
         case "change_model":
