@@ -42,9 +42,15 @@ async def message_handler(message: types.Message):
 async def message_handler(message: types.Message):
     prompt = "".join(message.get_args())
     logging.info(f"{message.from_user.full_name} /gen {prompt}")
-    await bot.send_photo(message.chat.id, ai.generate_image(prompt), reply_markup=keyboard.generate([["Regenerate", "redo:" + prompt], ["Prompt", "prompt:" + prompt]]))
-    await bot.delete_message(message.chat.id, message.message_id)
+    if len(prompt) < 64:
+
+        await bot.send_photo(message.chat.id, ai.generate_image(prompt), reply_markup=keyboard.generate([["Regenerate", "redo:" + prompt], ["Prompt", "prompt:" + prompt]]))
+        await bot.delete_message(message.chat.id, message.message_id)
+    else:
+        await bot.send_photo(message.chat.id, ai.generate_image(prompt))
     
+    
+        
     
 @dp.message_handler(commands=['steps'])
 async def message_handler(message: types.Message):
