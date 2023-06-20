@@ -30,6 +30,7 @@ class BackEndAI():
         "width":  self.config["ai"]["width"],
         "height":  self.config["ai"]["height"],
         "negative_prompt":  self.config["ai"]["defaultnegative"],
+        "sampler_index": self.config["ai"]["sampler"],
         "restore_faces": True}
         
         r = requests.post(url= self.ENDPOINT + "/sdapi/v1/txt2img", json=payload).json()
@@ -76,6 +77,20 @@ class BackEndAI():
 
     def get_modes(self):
         return [model["model_name"] for model in requests.get(url=self.ENDPOINT + "/sdapi/v1/sd-models").json()]
+    
+    def get_samplers(self):
+        return [sampler["name"] for sampler in requests.get(url=self.ENDPOINT + "/sdapi/v1/samplers").json()]
+    
+    def set_sampler(self, sampler):
+        self.config.read("conf.ini")
+        self.config.set('ai', 'sampler', sampler)
+        with open('conf.ini', 'w') as config_file:
+            self.config.write(config_file)
+        return True
+
+    
+        
+
 
 
 

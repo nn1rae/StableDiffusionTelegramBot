@@ -27,6 +27,7 @@ set cfg scale /cfg (cfg scale)
 set resolution /res (width) (height)
 set model /models
 get corrent configuration /config
+set sampler /sampler
     """
     await message.answer(text)
     await bot.delete_message(message.chat.id, message.message_id)
@@ -89,6 +90,11 @@ async def message_handler(message: types.Message):
     await bot.delete_message(message.chat.id, message.message_id)
     await message.answer("Available models:", reply_markup=keyboard.generate([[model_name, "change_model:" + model_name] for model_name in ai.get_modes()]))
     
+@dp.message_handler(commands=['sampler'])
+async def message_handler(message: types.Message):
+    await bot.delete_message(message.chat.id, message.message_id)
+    await message.answer("Available samplers:", reply_markup=keyboard.generate([[sampler, "change_sampler:" + sampler] for sampler in ai.get_samplers()]))
+    
 @dp.message_handler(commands=['config'])
 async def message_handler(message: types.Message):
     await bot.delete_message(message.chat.id, message.message_id)
@@ -104,6 +110,9 @@ async def claabackfunc(callback: types.CallbackQuery):
             await bot.send_message(callback.from_user.id, args)
         case "change_model":
             ai.set_model(args)
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
+        case "change_sampler":
+            ai.set_sampler(args)
             await bot.delete_message(callback.message.chat.id, callback.message.message_id)
         case _:
             pass
