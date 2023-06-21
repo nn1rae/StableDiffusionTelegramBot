@@ -4,20 +4,19 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 from configparser import ConfigParser
 from AIBackEndAPI import BackEndAI
-import time
-
 import keyboard
-
-ai = BackEndAI()
-config = ConfigParser()
-
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
-
+ai = BackEndAI()
+config = ConfigParser()
 bot = Bot(token=getenv("API_TOKEN"))
 dp = Dispatcher(bot)
+
+
+logging.basicConfig(level=logging.INFO)
+
+
 
 @dp.message_handler(commands=['help'])
 async def message_handler(message: types.Message):
