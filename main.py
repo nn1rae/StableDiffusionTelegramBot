@@ -36,11 +36,19 @@ async def message_handler(message: types.Message):
     await message.answer("Successfull")
     
     
+# Use in case u want to hendle generation by comand hangler, if uncomment comment message handler below V
+ 
+#@dp.message_handler(commands=['gen'])
+#async def message_handler(message: types.Message):
+#    prompt = "".join(message.get_args())
+#    logging.info(f"{message.from_user.full_name} /gen {prompt}")
+#    await bot.send_photo(message.chat.id, ai.generate_image(prompt))
     
-@dp.message_handler(commands=['gen'])
+
+@dp.message_handler()
 async def message_handler(message: types.Message):
-    prompt = "".join(message.get_args())
-    logging.info(f"{message.from_user.full_name} /gen {prompt}")
+    prompt = message.text
+    logging.info(f"{message.from_user.full_name} {prompt}")
     await bot.send_photo(message.chat.id, ai.generate_image(prompt))
     
     
