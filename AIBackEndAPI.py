@@ -87,6 +87,31 @@ class BackEndAI():
         with open('conf.ini', 'w') as config_file:
             self.config.write(config_file)
         return True
+    
+    
+    
+    def upscale_photo(self, image_path):
+        with open(image_path, 'rb') as image_file:
+            image_data = base64.b64encode(image_file.read()).decode('utf-8')
+            
+        payload = {
+    "resize_mode": 0,
+    "show_extras_results": True,
+    "gfpgan_visibility": 1,
+    "codeformer_visibility": 0,
+    "codeformer_weight": 0,
+    "upscaling_resize": 4,
+    "upscaling_resize_w": 512,
+    "upscaling_resize_h": 512,
+    "upscaling_crop": True,
+    "upscaler_1": "SwinIR 4x",
+    "upscaler_2": "None",
+    "extras_upscaler_2_visibility": 0,
+    "upscale_first": False,
+    "image": image_data
+    }
+        r = requests.post(url= self.ENDPOINT + "/sdapi/v1/extra-single-image", json=payload).json()
+        return base64.b64decode(r['image'])
 
     
         
