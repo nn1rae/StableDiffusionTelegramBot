@@ -35,7 +35,7 @@ set sampler /sampler
     
 @dp.message_handler(commands=['start'])
 async def message_handler(message: types.Message):
-    await message.answer("Successfull")
+    await message.answer(f"Hi {message.from_user.full_name}, send me prompt to continue")
     
     
 
