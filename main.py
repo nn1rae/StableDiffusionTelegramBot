@@ -129,6 +129,13 @@ async def message_handler(message: types.Message):
     else:
         logging.warning(f"{message.from_user.full_name} /hiresfix {message.get_args()}")
         await bot.send_message(message.chat.id, "Wrong fromat, this will be reported")
+        
+        
+@dp.message_handler(commands=['prestyles'])#add to help
+async def message_handler(message: types.Message):
+    await message.answer(ai.get_prestyles())
+    await bot.delete_message(message.chat.id, message.message_id)
+        
 
 
 @dp.message_handler(content_types=['text'])

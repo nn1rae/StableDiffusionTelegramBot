@@ -144,6 +144,15 @@ class BackEndAI():
         with open('conf.ini', 'w') as config_file:
             self.config.write(config_file)
         return True
+    
+    
+    def get_prestyles(self):
+        string = ""
+        for key, value in self.prestyles.items():
+            string += f"{key}: {value}\n"
+        return string
+            
+            
 
     
         
