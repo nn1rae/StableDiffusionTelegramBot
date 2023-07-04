@@ -20,7 +20,7 @@ class BackEndAI():
         return prompt
 
 
-    def generate_image(self, prompt):
+    def generate_image(self, prompt, seed=False):
         self.config.read("conf.ini")
         prompt = self._apply_prestyles(prompt)
         HiresFix_payload = {
@@ -38,7 +38,7 @@ class BackEndAI():
         "hr_negative_prompt": self.config["ai"]["defaultnegative"]
         }
         payload = {        
-        "seed": -1,
+        "seed": seed if seed else -1,
         "prompt": prompt,
         "steps":  self.config["ai"]["steps"],
         "cfg_scale":  self.config["ai"]["cfg_scale"],
@@ -52,7 +52,8 @@ class BackEndAI():
             payload.update(HiresFix_payload)
             
         r = requests.post(url= self.ENDPOINT + "/sdapi/v1/txt2img", json=payload).json()
-        return base64.b64decode(r['images'][0].split(",",1)[0])
+        jsoninfo = json.loads(r['info'])    
+        return base64.b64decode(r['images'][0].split(",",1)[0]), jsoninfo["seed"]
 
     def set_steps(self,steps):
         self.config.read("conf.ini")

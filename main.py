@@ -6,19 +6,50 @@ from configparser import ConfigParser
 from AIBackEndAPI import BackEndAI
 import keyboard
 from os import remove
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
 load_dotenv()
 
 ai = BackEndAI()
 config = ConfigParser()
 bot = Bot(token=getenv("API_TOKEN"))
-dp = Dispatcher(bot)
+dp = Dispatcher(bot,storage=MemoryStorage())
+
+class Form(StatesGroup):
+   getprompt = State()
 
 
 logging.basicConfig(level=logging.INFO)
 
 
-#Generate image /gen [prompt]
+
+@dp.message_handler(commands=['seed']) #add to help
+async def message_handler(message: types.Message,state: FSMContext):
+    await Form.getprompt.set()
+    await state.update_data(seed=message.get_args().replace(" ", ""))
+    await bot.delete_message(message.chat.id, message.message_id)
+    msg = await message.answer("Waiting for prompt...")
+    await state.update_data(prev_msg_id=msg["message_id"])
+    
+    
+    
+@dp.message_handler(state=Form.getprompt)
+async def message_handler(message : types.Message, state: FSMContext):
+    prompt = message.text
+    user_data = await state.get_data()
+    await bot.delete_message(message.chat.id, user_data["prev_msg_id"])
+    logging.info(f"{message.from_user.full_name} {prompt}")
+    image, seed = ai.generate_image(prompt, user_data["seed"])
+    await bot.send_photo(message.chat.id, image, reply_markup=keyboard.generate([["Show seed", "showseed:" + str(seed)]]))
+    await state.finish()
+
+
+    
+
 @dp.message_handler(commands=['help'])
 async def message_handler(message: types.Message):
     text = """Just send prompt to generate
@@ -98,14 +129,14 @@ async def message_handler(message: types.Message):
 async def claabackfunc(callback: types.CallbackQuery):
     comand, args = callback.data.split(":", maxsplit=1)
     match comand:
-        case "prompt":
-            await bot.send_message(callback.from_user.id, args)
         case "change_model":
             ai.set_model(args)
             await bot.delete_message(callback.message.chat.id, callback.message.message_id)
         case "change_sampler":
             ai.set_sampler(args)
             await bot.delete_message(callback.message.chat.id, callback.message.message_id)
+        case "showseed":
+            await bot.send_message(callback.from_user.id, args)
         case _:
             pass
         
@@ -142,7 +173,8 @@ async def message_handler(message: types.Message):
 async def message_handler(message: types.Message):
     prompt = message.text
     logging.info(f"{message.from_user.full_name} {prompt}")
-    await bot.send_photo(message.chat.id, ai.generate_image(prompt))
+    image, seed = ai.generate_image(prompt)
+    await bot.send_photo(message.chat.id, image, reply_markup=keyboard.generate([["Show seed", "showseed:" + str(seed)]]))
 
 
 
