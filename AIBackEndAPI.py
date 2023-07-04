@@ -23,7 +23,22 @@ class BackEndAI():
     def generate_image(self, prompt):
         self.config.read("conf.ini")
         prompt = self._apply_prestyles(prompt)
-        payload = {
+        HiresFix_payload = {
+        "enable_hr": "true",
+        "denoising_strength": 0.7,
+        "firstphase_width": self.config["ai"]["width"],
+        "firstphase_height": self.config["ai"]["height"],
+        "hr_scale": 2,
+        "hr_upscaler": "SwinIR_4x",
+        "hr_second_pass_steps": self.config["ai"]["steps"],
+        "hr_resize_x": 0,
+        "hr_resize_y": 0,
+        "hr_sampler_name": self.config["ai"]["sampler"],
+        "hr_prompt": prompt,
+        "hr_negative_prompt": self.config["ai"]["defaultnegative"]
+        }
+        payload = {        
+        "seed": -1,
         "prompt": prompt,
         "steps":  self.config["ai"]["steps"],
         "cfg_scale":  self.config["ai"]["cfg_scale"],
@@ -31,8 +46,11 @@ class BackEndAI():
         "height":  self.config["ai"]["height"],
         "negative_prompt":  self.config["ai"]["defaultnegative"],
         "sampler_index": self.config["ai"]["sampler"],
-        "restore_faces": True}
+        "restore_faces": self.config["ai"]["restorefaces"]}
         
+        if self.config["ai"]["hiresfix"] == "true":
+            payload.update(HiresFix_payload)
+            
         r = requests.post(url= self.ENDPOINT + "/sdapi/v1/txt2img", json=payload).json()
         return base64.b64decode(r['images'][0].split(",",1)[0])
 
@@ -104,7 +122,7 @@ class BackEndAI():
     "upscaling_resize_w": 512,
     "upscaling_resize_h": 512,
     "upscaling_crop": True,
-    "upscaler_1": "SwinIR 4x",
+    "upscaler_1": "SwinIR_4x",
     "upscaler_2": "None",
     "extras_upscaler_2_visibility": 0,
     "upscale_first": False,
@@ -112,6 +130,20 @@ class BackEndAI():
     }
         r = requests.post(url= self.ENDPOINT + "/sdapi/v1/extra-single-image", json=payload).json()
         return base64.b64decode(r['image'])
+    
+    def set_restorefaces(self,data):
+        self.config.read("conf.ini")
+        self.config.set('ai', 'restorefaces', data)
+        with open('conf.ini', 'w') as config_file:
+            self.config.write(config_file)
+        return True
+    
+    def set_hiresfix(self,data):
+        self.config.read("conf.ini")
+        self.config.set('ai', 'hiresfix', data)
+        with open('conf.ini', 'w') as config_file:
+            self.config.write(config_file)
+        return True
 
     
         
